@@ -91,14 +91,14 @@ def write_configs(i):
     psd-file= LISA_A:{cwd}/files/A_psd.txt LISA_E:{cwd}/files/E_psd.txt LISA_T:{cwd}/files/T_psd.txt
 
     ; Frame file channel name for AET
-    frame-files = LISA_A:{cwd}/files/A_nogb.gwf LISA_E:{cwd}/files/E_nogb.gwf LISA_T:{cwd}/files/T_nogb.gwf
+    frame-files = LISA_A:{cwd}/files/A_withgbs.gwf LISA_E:{cwd}/files/E_withgbs.gwf LISA_T:{cwd}/files/T_withgbs.gwf
     channel-name = LISA_A:LA:LA LISA_E:LE:LE LISA_T:LT:LT
 
     [model]
     name = brute_lisa_sky_modes_marginalize
     base_model = relative
     loop_polarization=0
-    low-frequency-cutoff = 0.0001
+    low-frequency-cutoff = 1e-4
     high-frequency-cutoff = 1e-2
     epsilon=0.01
     mass1_ref={params['mass1']}
@@ -200,7 +200,7 @@ def write_configs(i):
 # found in Sangria
 for i in range(6):
     data_config = write_configs(i)
-    with open(f'configs/{i}/bbhx_nogbs.ini', 'w') as f:
+    with open(f'configs/{i}/bbhx_withgbs.ini', 'w') as f:
         f.write(data_config)
 
     print(f'Sample config for signal {i} complete!')
