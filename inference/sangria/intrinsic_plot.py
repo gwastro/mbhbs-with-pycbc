@@ -1,16 +1,19 @@
 import pandas as pd
 import numpy as np
 import subprocess
+import sys
 import os
 
 import ldc.io.hdf5 as hdfio
 from ldc.common import tools
 
+from bbhx.utils.transform import LISA_to_SSB
 
 sangria_fn = "../../../datasets/mbhb-unblinded.h5"
 mbhb, units = hdfio.load_array(sangria_fn, name="sky/mbhb/cat")
 pd.DataFrame(mbhb)
 sigs = pd.DataFrame(mbhb).to_dict('records')
+
 
 cwd = os.getcwd()
 
@@ -47,19 +50,15 @@ wave['Spin2'], wave['InitialPolarAngleL'], wave['Redshift'],\
 wave['ObservationDuration'], wave['InitialAzimuthalAngleL'], wave['Cadence']
     bbhx_sigs[f'mbhb{i}'] = wave
 
-
-
-
 def plt(index):
 
     params = bbhx_sigs[f'mbhb{index}']
 
     plot_code = f"""
     pycbc_inference_plot_posterior \
-        --input-file {cwd}/single/configs/{i}/bbhx_recon.hdf:{'Single_signal_with_GBs'} \
-{cwd}/multi/configs/{i}/bbhx_recon.hdf:{'Multiple_signals_with_GBs'} \
-        --plot-contours --no-contour-labels --contour-percentiles 90 \
-        --output-file {cwd}/plots/{i}_int_withgbs.png \
+        --input-file {cwd}/configs/{i}/bbhx_recon.hdf \
+        --output-file {cwd}/plots/{i}_results_int.png \
+        --z-arg snr --plot-scatter --plot-marginal \
         --parameters \
             mass1_from_mchirp_q(mchirp,q):mass1 \
             mass2_from_mchirp_q(mchirp,q):mass2 \
@@ -75,6 +74,7 @@ def plt(index):
 
 
 p=[0]
+
 for i in p:#range(6):
     process = subprocess.Popen(plt(i).split(), stdout=subprocess.PIPE)
     output, error = process.communicate()

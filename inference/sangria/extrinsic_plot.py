@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import subprocess
+import sys
 import os
 
 import ldc.io.hdf5 as hdfio
@@ -8,13 +9,14 @@ from ldc.common import tools
 
 from bbhx.utils.transform import SSB_to_LISA
 
-
-sangria_fn = "../../../mbhb-unblinded.h5"
+sangria_fn = "/users/connor/main/datasets/mbhb-unblinded.h5"
 mbhb, units = hdfio.load_array(sangria_fn, name="sky/mbhb/cat")
 pd.DataFrame(mbhb)
 sigs = pd.DataFrame(mbhb).to_dict('records')
 
-cwd = os.getcwd()
+
+path = os.getcwd()
+conf = sys.argv[1]
 
 
 def spin_conv(mag, pol):
@@ -50,8 +52,6 @@ wave['ObservationDuration'], wave['InitialAzimuthalAngleL'], wave['Cadence']
     bbhx_sigs[f'mbhb{i}'] = wave
 
 
-
-
 def plt(index):
 
     params = bbhx_sigs[f'mbhb{index}']
@@ -64,12 +64,14 @@ def plt(index):
     params['eclipticlatitude'] = ssb_frame_params[2]
     params['polarization'] = ssb_frame_params[3]
 
+
+    #--plot-contours --contour-color black \
+
     plot_code = f"""
     pycbc_inference_plot_posterior \
-        --input-file {cwd}/single/configs/{i}/bbhx_recon.hdf:{'Single_signal_with_GBs'} \
-{cwd}/multi/configs/{i}/bbhx_recon.hdf:{'Multiple_signals_with_GBs'} \
-        --plot-contours --no-contour-labels --contour-percentiles 90 \
-        --output-file {cwd}/plots/{i}_ext_withgbs.png \
+        --input-file {path}/{conf}/bbhx_recon.hdf \
+        --output-file {path}/{conf}//results_extrinsic.png \
+        --z-arg snr --plot-scatter --plot-marginal \
         --parameters \
             tc \
             distance \
@@ -77,21 +79,22 @@ def plt(index):
             eclipticlongitude \
             polarization \
             inclination \
+            coa_phase \
         --expected-parameters \
             tc:{params['tc']} \
             distance:{params['distance']} \
             eclipticlatitude:{params['eclipticlatitude']} \
             eclipticlongitude:{params['eclipticlongitude']} \
-            polarization:{np.pi + params['polarization']} \
+            polarization:{params['polarization']} \
             inclination:{params['inclination']} \
+            coa_phase:{params['coa_phase']}
             """
     return plot_code
 
+p=[conf[-1]]
 
-p=[0]
 for i in p:#range(6):
     process = subprocess.Popen(plt(i).split(), stdout=subprocess.PIPE)
     output, error = process.communicate()
     print('{} image created'.format(i))
-
 
