@@ -11,7 +11,10 @@ from ldc.common import tools
 import numpy as np
 import pandas as pd
 
-sangria_fn = "../datasets/mbhb-unblinded.h5"
+
+
+
+sangria_fn = "../../../datasets/mbhb-unblinded.h5"
 mbhb, units = hdfio.load_array(sangria_fn, name="sky/mbhb/cat")
 pd.DataFrame(mbhb)
 sigs = pd.DataFrame(mbhb).to_dict('records')
@@ -104,20 +107,8 @@ for i in range(6):
     E_data += E_b
     T_data += T_b
 
-Apsd = A_data.psd(psd_time/sample_length)
-Epsd = E_data.psd(psd_time/sample_length)
-Tpsd = T_data.psd(psd_time/sample_length)
-Apsd = interpolate(Apsd, A_data.delta_f)
-Epsd = interpolate(Epsd, E_data.delta_f)
-Tpsd = interpolate(Tpsd, T_data.delta_f)
-Apsd.save(f'files/A_psd.txt')
-Epsd.save(f'files/E_psd.txt')
-Tpsd.save(f'files/T_psd.txt')
 
-
-
-write_frame(f'files/A_withgbs.gwf', 'LA:LA', A_data)
-write_frame(f'files/E_withgbs.gwf', 'LE:LE', E_data)
-write_frame(f'files/T_withgbs.gwf', 'LT:LT', T_data)
-
+write_frame('../files/A_withgbs.gwf', 'LA:LA', A_data)
+write_frame('../files/E_withgbs.gwf', 'LE:LE', E_data)
+write_frame('../files/T_withgbs.gwf', 'LT:LT', T_data)
 

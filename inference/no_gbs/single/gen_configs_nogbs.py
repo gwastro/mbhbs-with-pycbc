@@ -66,8 +66,7 @@ for i in range(len(bbhx_sigs)):
 
 p = Path(__file__).parents[3]
 
-# This function reads in the reference template parameters from the temp bank
-# search and generates a .ini file for the inference run.
+
 def write_configs(i):
 
     params = bbhx_sigs[i]
@@ -93,8 +92,8 @@ LISA_T:{p}/psds/no_gbs/single/files/T_psd_{i}.txt
 
     ; Frame file channel name for AET
     frame-files = LISA_A:{p}/signal_generation/no_gbs/files/{i}_A_nogbs.gwf \
-LISA_E:{p}/files/{i}_E_nogbs.gwf \
-LISA_T:{p}/files/{i}_T_nogbs.gwf
+LISA_E:{p}/signal_generation/no_gbs/files/{i}_E_nogbs.gwf \
+LISA_T:{p}/signal_generation/no_gbs/files/{i}_T_nogbs.gwf
     channel-name = LISA_A:LA:LA LISA_E:LE:LE LISA_T:LT:LT
 
     [model]

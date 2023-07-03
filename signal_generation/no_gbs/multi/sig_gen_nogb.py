@@ -2,7 +2,6 @@ from pycbc.waveform import get_fd_det_waveform_sequence
 from pycbc.types import TimeSeries
 from pycbc.types import zeros
 from pycbc.frame import write_frame
-from pycbc.psd import interpolate
 
 from ldc.common.series import TDI
 import ldc.io.hdf5 as hdfio
