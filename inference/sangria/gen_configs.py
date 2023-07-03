@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-import os
+from pathlib import Path
 
 from pycbc.conversions import mchirp_from_mass1_mass2, q_from_mass1_mass2
 from bbhx.utils.transform import SSB_to_LISA
@@ -63,7 +63,7 @@ for i in range(len(bbhx_sigs)):
     curr['polarization'] = up[3]
 
 
-cwd = os.getcwd()
+p = Path(__file__).parents[3]
 
 
 def write_configs(i):
@@ -85,10 +85,14 @@ def write_configs(i):
     sample-rate = 0.2
 
     ; psd settings
-    psd-file= LISA_A:{cwd}/files/A_psd.txt LISA_E:{cwd}/files/E_psd.txt LISA_T:{cwd}/files/T_psd.txt
+    psd-file= LISA_A:{p}/psds/sangria/files/A_psd.txt \
+LISA_E:{p}/psds/sangria/files/E_psd.txt \
+LISA_T:{p}/psds/sangria/files/T_psd.txt
 
     ; Frame file channel name for AET
-    frame-files = LISA_A:{cwd}/files/A_sangria.gwf LISA_E:{cwd}/files/E_sangria.gwf LISA_T:{cwd}/files/T_sangria.gwf
+    frame-files = LISA_A:{p}/signal_generation/sangria/files/A_blind.gwf \
+LISA_E:{p}/signal_generation/sangria/files/E_blind.gwf \
+LISA_T:{p}/signal_generation/sangria/files/T_blind.gwf
     channel-name = LISA_A:LA:LA LISA_E:LE:LE LISA_T:LT:LT
 
     [model]
