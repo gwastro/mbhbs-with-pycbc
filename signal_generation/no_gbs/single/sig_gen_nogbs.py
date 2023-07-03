@@ -13,7 +13,7 @@ import pandas as pd
 
 
 
-sangria_training = "/users/connor/main/datasets/training/LDC2_sangria_training_v2.h5"
+sangria_training = "../../../datasets/training/LDC2_sangria_training_v2.h5"
 
 # Reading in noiseless data with LDC code
 tdi_nn = hdfio.load_array(sangria_training, name="sky/mbhb/tdi")
@@ -124,8 +124,7 @@ wave['ObservationDuration'], wave['InitialAzimuthalAngleL'], wave['Cadence']
 psd_time = 6307200
 sample_length = 31
 
-# Injecting BBHx signal with noise from training without GBs. Also saves a psd
-# for each gwf (not one psd for all 6 sigs in one gwf).
+# Injecting BBHx signal with noise from training without GBs.
 for i in range(6):
     params = bbhx_sigs[f'mbhb{i}']
     tdi = get_fd_det_waveform_sequence(ifos=['LISA_A','LISA_E','LISA_T'], **params, ref_frame='SSB')
@@ -137,18 +136,8 @@ for i in range(6):
     E_data = TimeSeries(zeros(31536000/5,dtype=float),delta_t=5,epoch=0) + noise_E + E_b
     T_data = TimeSeries(zeros(31536000/5,dtype=float),delta_t=5,epoch=0) + noise_T + T_b
 
-    Apsd = A_data.psd(psd_time/sample_length)
-    Epsd = E_data.psd(psd_time/sample_length)
-    Tpsd = T_data.psd(psd_time/sample_length)
-    Apsd = interpolate(Apsd, A_data.delta_f)
-    Epsd = interpolate(Epsd, E_data.delta_f)
-    Tpsd = interpolate(Tpsd, T_data.delta_f)
-    Apsd.save(f'files/A_psd_{i}.txt')
-    Epsd.save(f'files/E_psd_{i}.txt')
-    Tpsd.save(f'files/T_psd_{i}.txt')
-
-    write_frame(f'files/{i}_A_nogb.gwf', 'LA:LA', A_data)
-    write_frame(f'files/{i}_E_nogb.gwf', 'LE:LE', E_data)
-    write_frame(f'files/{i}_T_nogb.gwf', 'LT:LT', T_data)
+    write_frame(f'../files/{i}_A_nogbs.gwf', 'LA:LA', A_data)
+    write_frame(f'../files/{i}_E_nogbs.gwf', 'LE:LE', E_data)
+    write_frame(f'../files/{i}_T_nogbs.gwf', 'LT:LT', T_data)
 
     print(f'Signal {i} generated')
