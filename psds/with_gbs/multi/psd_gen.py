@@ -32,8 +32,8 @@ Tpsd = interpolate(Tpsd, T_data.delta_f)
 #-----------------------Writing to file-----------------------
 #-------------------------------------------------------------
 
-Apsd.save('files/A_psd.txt')
-Epsd.save('files/E_psd.txt')
-Tpsd.save('files/T_psd.txt')
+Apsd.save('../files/A_psd.txt')
+Epsd.save('../files/E_psd.txt')
+Tpsd.save('../files/T_psd.txt')
 
 print('PSDs generated')

@@ -86,9 +86,9 @@ def write_configs(i):
     sample-rate = 0.2
 
     ; psd settings
-    psd-file= LISA_A:{p}/psds/no_gbs/single/files/A_psd_{i}.txt \
-LISA_E:{p}/psds/no_gbs/single/files/E_psd_{i}.txt \
-LISA_T:{p}/psds/no_gbs/single/files/T_psd_{i}.txt
+    psd-file= LISA_A:{p}/psds/no_gbs/files/A_psd_{i}.txt \
+LISA_E:{p}/psds/no_gbs/files/E_psd_{i}.txt \
+LISA_T:{p}/psds/no_gbs/files/T_psd_{i}.txt
 
     ; Frame file channel name for AET
     frame-files = LISA_A:{p}/signal_generation/no_gbs/files/{i}_A_nogbs.gwf \
