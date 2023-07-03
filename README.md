@@ -60,3 +60,14 @@ After the data has been generated, we can now estimate the PSDs by navigating to
 
 ## Inference (in progress)
 
+### Configuration file generation
+
+Inference is also split into different directories depending on the type of noise and injection(s) you wish to analyse. Navigate to the desired directory and run the script beginning with **gen_configs** to generate the configuration files for all injections. These are stored in the *configs* directory which is split into 6 (0-5) so inference can be run on each signal.
+
+### Running inference
+
+Each folder also contains a script called *run_inference.sh* along with the config generation script. Simply run this script from the same directory to start the inference.
+
+**IMPORTANT** - The sampler section of the configuration files matches that of the analysis used in the paper. It is recommended that you use multiple cores when running inference to signifcantly reduce the time it takes to complete. We used 32 cores which would take roughly 15 - 20 hours to complete. Alternitvely, if you would rather quickly run inference (for example to test everything is working), reducing the setting `nlive` in the sampler confiuration will also reduce the time taken for inference to complete.
+
+### Post-processing, sky position unfolding
