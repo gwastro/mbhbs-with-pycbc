@@ -8,10 +8,11 @@ from ldc.common.series import TDI
 import ldc.io.hdf5 as hdfio
 from ldc.common import tools
 
-import pickle
 import numpy as np
-import matplotlib.pylab as plt
 import pandas as pd
+
+
+
 
 sangria_fn = "../../../datasets/mbhb-unblinded.h5"
 mbhb, units = hdfio.load_array(sangria_fn, name="sky/mbhb/cat")
@@ -87,8 +88,13 @@ wave['Spin2'], wave['InitialPolarAngleL'], wave['Redshift'],\
 wave['ObservationDuration'], wave['InitialAzimuthalAngleL'], wave['Cadence']
     bbhx_sigs[f'mbhb{i}'] = wave
 
+
 psd_time = 6307200
 sample_length = 31
+
+A_data = TimeSeries(zeros(31536000/5,dtype=float),delta_t=5,epoch=0) + noise_A
+E_data = TimeSeries(zeros(31536000/5,dtype=float),delta_t=5,epoch=0) + noise_E
+T_data = TimeSeries(zeros(31536000/5,dtype=float),delta_t=5,epoch=0) + noise_T
 
 for i in range(6):
     params = bbhx_sigs[f'mbhb{i}']
@@ -97,24 +103,12 @@ for i in range(6):
     E_b = tdi['LISA_E'].to_timeseries()
     T_b = tdi['LISA_T'].to_timeseries()
 
-    A_data = TimeSeries(zeros(31536000/5,dtype=float),delta_t=5,epoch=0) + noise_A + A_b
-    E_data = TimeSeries(zeros(31536000/5,dtype=float),delta_t=5,epoch=0) + noise_E + E_b
-    T_data = TimeSeries(zeros(31536000/5,dtype=float),delta_t=5,epoch=0) + noise_T + T_b
+    A_data += A_b
+    E_data += E_b
+    T_data += T_b
 
 
-    Apsd = A_data.psd(psd_time/sample_length)
-    Epsd = E_data.psd(psd_time/sample_length)
-    Tpsd = T_data.psd(psd_time/sample_length)
-    Apsd = interpolate(Apsd, A_data.delta_f)
-    Epsd = interpolate(Epsd, E_data.delta_f)
-    Tpsd = interpolate(Tpsd, T_data.delta_f)
-    Apsd.save(f'files/A_psd_{i}.txt')
-    Epsd.save(f'files/E_psd_{i}.txt')
-    Tpsd.save(f'files/T_psd_{i}.txt')
-
-
-    write_frame(f'files/{i}_A_withgbs.gwf', 'LA:LA', A_data)
-    write_frame(f'files/{i}_E_withgbs.gwf', 'LE:LE', E_data)
-    write_frame(f'files/{i}_T_withgbs.gwf', 'LT:LT', T_data)
-
+write_frame('../files/A_withgbs.gwf', 'LA:LA', A_data)
+write_frame('../files/E_withgbs.gwf', 'LE:LE', E_data)
+write_frame('../files/T_withgbs.gwf', 'LT:LT', T_data)
 

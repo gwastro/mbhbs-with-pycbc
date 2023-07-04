@@ -2,7 +2,6 @@ from pycbc.waveform import get_fd_det_waveform_sequence
 from pycbc.types import TimeSeries
 from pycbc.types import zeros
 from pycbc.frame import write_frame
-from pycbc.psd import interpolate
 
 from ldc.common.series import TDI
 import ldc.io.hdf5 as hdfio
@@ -11,14 +10,15 @@ from ldc.common import tools
 import numpy as np
 import pandas as pd
 
-
-
-sangria_training = "../../../datasets/LDC2_sangria_training_v2.h5"
+sangria_fn = "../../../datasets/mbhb-unblinded.h5"
+mbhb, units = hdfio.load_array(sangria_fn, name="sky/mbhb/cat")
+pd.DataFrame(mbhb)
+sigs = pd.DataFrame(mbhb).to_dict('records')
 
 # Reading in noiseless data with LDC code
-tdi_nn = hdfio.load_array(sangria_training, name="sky/mbhb/tdi")
+tdi_nn = hdfio.load_array(sangria_fn, name="sky/mbhb/tdi")
 
-tdi_nn = TDI.load(sangria_training, name="sky/mbhb/tdi")
+tdi_nn = TDI.load(sangria_fn, name="sky/mbhb/tdi")
 
 X_nn = tdi_nn['X']
 Y_nn = tdi_nn['Y']
@@ -35,7 +35,7 @@ dt=5.
 t_range = np.arange(tmin,tmax,dt)
 
 # Reading in standard noisy data
-tdi_ts, tdi_descr = hdfio.load_array(sangria_training, name="obs/tdi")
+tdi_ts, tdi_descr = hdfio.load_array(sangria_fn, name="obs/tdi")
 
 X = tdi_ts['X']
 Y = tdi_ts['Y']
@@ -46,44 +46,10 @@ E = (X - 2*Y + Z)/np.sqrt(6)
 T = (X + Y + Z)/np.sqrt(3)
 
 
-# Noise including GBs
-noise_A_withgb = TimeSeries(A - A_nn, delta_t=5.)
-noise_E_withgb = TimeSeries(E - E_nn, delta_t=5.)
-noise_T_withgb = TimeSeries(T - T_nn, delta_t=5.)
-
-
-# Generating GBs to be removed from igb, dgb, vgb files.
-for i in ['v','d','i']:
-
-    print(f"{i}gb")
-
-    tdi_gbs = TDI.load(sangria_training, name=f"sky/{i}gb/tdi")
-
-    gb_X = tdi_gbs['X']
-    gb_Y = tdi_gbs['Y']
-    gb_Z = tdi_gbs['Z']
-
-    gb_A = (gb_Z - gb_X)/np.sqrt(2)
-    gb_E = (gb_X - 2*gb_Y + gb_Z)/np.sqrt(6)
-    gb_T = (gb_X + gb_Y + gb_Z)/np.sqrt(3)
-
-    noise_A_withgb -= TimeSeries(gb_A, delta_t=5.)
-    noise_E_withgb -= TimeSeries(gb_E, delta_t=5.)
-    noise_T_withgb -= TimeSeries(gb_T, delta_t=5.)
-
-
-# Noise without gbs
-noise_A = noise_A_withgb
-noise_E = noise_E_withgb
-noise_T = noise_T_withgb
-
-
-
-# Reading in MBHB signals from Sangria blind
-sangria_fn = "../../../datasets/mbhb-unblinded.h5"
-mbhb, units = hdfio.load_array(sangria_fn, name="sky/mbhb/cat")
-pd.DataFrame(mbhb)
-sigs = pd.DataFrame(mbhb).to_dict('records')
+# Just noise
+noise_A = TimeSeries(A - A_nn, delta_t=5.)
+noise_E = TimeSeries(E - E_nn, delta_t=5.)
+noise_T = TimeSeries(T - T_nn, delta_t=5.)
 
 
 def spin_conv(mag, pol):
@@ -118,40 +84,23 @@ wave['Spin2'], wave['InitialPolarAngleL'], wave['Redshift'],\
 wave['ObservationDuration'], wave['InitialAzimuthalAngleL'], wave['Cadence']
     bbhx_sigs[f'mbhb{i}'] = wave
 
-
-
 psd_time = 6307200
 sample_length = 31
 
-# Injecting BBHx signal with noise from training without GBs. Also saves a psd
-# for each gwf (not one psd for all 6 sigs in one gwf).
-
-A_data = TimeSeries(zeros(31536000/5,dtype=float),delta_t=5,epoch=0) + noise_A
-E_data = TimeSeries(zeros(31536000/5,dtype=float),delta_t=5,epoch=0) + noise_E
-T_data = TimeSeries(zeros(31536000/5,dtype=float),delta_t=5,epoch=0) + noise_T
-
 for i in range(6):
     params = bbhx_sigs[f'mbhb{i}']
-    # Read in signals are in the SSB frame
     tdi = get_fd_det_waveform_sequence(ifos=['LISA_A','LISA_E','LISA_T'], **params, ref_frame='SSB')
     A_b = tdi['LISA_A'].to_timeseries()
     E_b = tdi['LISA_E'].to_timeseries()
     T_b = tdi['LISA_T'].to_timeseries()
 
-    A_data += A_b
-    E_data += E_b
-    T_data += T_b
+    A_data = TimeSeries(zeros(31536000/5,dtype=float),delta_t=5,epoch=0) + noise_A + A_b
+    E_data = TimeSeries(zeros(31536000/5,dtype=float),delta_t=5,epoch=0) + noise_E + E_b
+    T_data = TimeSeries(zeros(31536000/5,dtype=float),delta_t=5,epoch=0) + noise_T + T_b
 
-Apsd = A_data.psd(psd_time/sample_length)
-Epsd = E_data.psd(psd_time/sample_length)
-Tpsd = T_data.psd(psd_time/sample_length)
-Apsd = interpolate(Apsd, A_data.delta_f)
-Epsd = interpolate(Epsd, E_data.delta_f)
-Tpsd = interpolate(Tpsd, T_data.delta_f)
-Apsd.save(f'files/A_psd.txt')
-Epsd.save(f'files/E_psd.txt')
-Tpsd.save(f'files/T_psd.txt')
 
-write_frame(f'files/A_nogb.gwf', 'LA:LA', A_data)
-write_frame(f'files/E_nogb.gwf', 'LE:LE', E_data)
-write_frame(f'files/T_nogb.gwf', 'LT:LT', T_data)
+    write_frame(f'files/{i}_A_withgbs.gwf', 'LA:LA', A_data)
+    write_frame(f'files/{i}_E_withgbs.gwf', 'LE:LE', E_data)
+    write_frame(f'files/{i}_T_withgbs.gwf', 'LT:LT', T_data)
+
+

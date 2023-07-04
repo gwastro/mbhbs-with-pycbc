@@ -2,7 +2,6 @@ from pycbc.waveform import get_fd_det_waveform_sequence
 from pycbc.types import TimeSeries
 from pycbc.types import zeros
 from pycbc.frame import write_frame
-from pycbc.psd import interpolate
 
 from ldc.common.series import TDI
 import ldc.io.hdf5 as hdfio
@@ -13,7 +12,7 @@ import pandas as pd
 
 
 
-sangria_training = "/users/connor/main/datasets/training/LDC2_sangria_training_v2.h5"
+sangria_training = "../../../datasets/LDC2_sangria_training_v2.h5"
 
 # Reading in noiseless data with LDC code
 tdi_nn = hdfio.load_array(sangria_training, name="sky/mbhb/tdi")
@@ -79,9 +78,8 @@ noise_T = noise_T_withgb
 
 
 
-
 # Reading in MBHB signals from Sangria blind
-sangria_fn = "/users/connor/main/datasets/mbhb-unblinded.h5"
+sangria_fn = "../../../datasets/mbhb-unblinded.h5"
 mbhb, units = hdfio.load_array(sangria_fn, name="sky/mbhb/cat")
 pd.DataFrame(mbhb)
 sigs = pd.DataFrame(mbhb).to_dict('records')
@@ -126,29 +124,24 @@ sample_length = 31
 
 # Injecting BBHx signal with noise from training without GBs. Also saves a psd
 # for each gwf (not one psd for all 6 sigs in one gwf).
+
+A_data = TimeSeries(zeros(31536000/5,dtype=float),delta_t=5,epoch=0) + noise_A
+E_data = TimeSeries(zeros(31536000/5,dtype=float),delta_t=5,epoch=0) + noise_E
+T_data = TimeSeries(zeros(31536000/5,dtype=float),delta_t=5,epoch=0) + noise_T
+
 for i in range(6):
     params = bbhx_sigs[f'mbhb{i}']
+    # Read in signals are in the SSB frame
     tdi = get_fd_det_waveform_sequence(ifos=['LISA_A','LISA_E','LISA_T'], **params, ref_frame='SSB')
     A_b = tdi['LISA_A'].to_timeseries()
     E_b = tdi['LISA_E'].to_timeseries()
     T_b = tdi['LISA_T'].to_timeseries()
 
-    A_data = TimeSeries(zeros(31536000/5,dtype=float),delta_t=5,epoch=0) + noise_A + A_b
-    E_data = TimeSeries(zeros(31536000/5,dtype=float),delta_t=5,epoch=0) + noise_E + E_b
-    T_data = TimeSeries(zeros(31536000/5,dtype=float),delta_t=5,epoch=0) + noise_T + T_b
+    A_data += A_b
+    E_data += E_b
+    T_data += T_b
 
-    Apsd = A_data.psd(psd_time/sample_length)
-    Epsd = E_data.psd(psd_time/sample_length)
-    Tpsd = T_data.psd(psd_time/sample_length)
-    Apsd = interpolate(Apsd, A_data.delta_f)
-    Epsd = interpolate(Epsd, E_data.delta_f)
-    Tpsd = interpolate(Tpsd, T_data.delta_f)
-    Apsd.save(f'files/A_psd_{i}.txt')
-    Epsd.save(f'files/E_psd_{i}.txt')
-    Tpsd.save(f'files/T_psd_{i}.txt')
 
-    write_frame(f'files/{i}_A_nogb.gwf', 'LA:LA', A_data)
-    write_frame(f'files/{i}_E_nogb.gwf', 'LE:LE', E_data)
-    write_frame(f'files/{i}_T_nogb.gwf', 'LT:LT', T_data)
-
-    print(f'Signal {i} generated')
+write_frame(f'../files/A_nogbs.gwf', 'LA:LA', A_data)
+write_frame(f'../files/E_nogbs.gwf', 'LE:LE', E_data)
+write_frame(f'../files/T_nogbs.gwf', 'LT:LT', T_data)

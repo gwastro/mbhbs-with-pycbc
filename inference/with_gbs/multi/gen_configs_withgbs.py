@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-import os
+from pathlib import Path
 
 from pycbc.conversions import mchirp_from_mass1_mass2, q_from_mass1_mass2
 from bbhx.utils.transform import SSB_to_LISA
@@ -8,8 +8,7 @@ from bbhx.utils.transform import SSB_to_LISA
 import ldc.io.hdf5 as hdfio
 from ldc.common import tools
 
-# This reads in the highest SNR templates for each trigger in the temp bank
-# search.
+
 sangria_fn = "../../../datasets/mbhb-unblinded.h5"
 mbhb, units = hdfio.load_array(sangria_fn, name="sky/mbhb/cat")
 pd.DataFrame(mbhb)
@@ -64,11 +63,9 @@ for i in range(len(bbhx_sigs)):
     curr['polarization'] = up[3]
 
 
-cwd = os.getcwd()
+p = Path(__file__).parents[3]
 
 
-# This function reads in the reference template parameters from the temp bank
-# search and generates a .ini file for the inference run.
 def write_configs(i):
 
     params = bbhx_sigs[i]
@@ -88,10 +85,14 @@ def write_configs(i):
     sample-rate = 0.2
 
     ; psd settings
-    psd-file= LISA_A:{cwd}/files/A_psd.txt LISA_E:{cwd}/files/E_psd.txt LISA_T:{cwd}/files/T_psd.txt
+    psd-file= LISA_A:{p}/psds/with_gbs/files/A_psd.txt \
+LISA_E:{p}/psds/with_gbs/files/E_psd.txt \
+LISA_T:{p}/psds/with_gbs/files/T_psd.txt
 
     ; Frame file channel name for AET
-    frame-files = LISA_A:{cwd}/files/A_withgbs.gwf LISA_E:{cwd}/files/E_withgbs.gwf LISA_T:{cwd}/files/T_withgbs.gwf
+    frame-files = LISA_A:{p}/signal_generation/with_gbs/files/A_withgbs.gwf \
+LISA_E:{p}/signal_generation/with_gbs/files/E_withgbs.gwf \
+LISA_T:{p}/signal_generation/with_gbs/files/T_withgbs.gwf
     channel-name = LISA_A:LA:LA LISA_E:LE:LE LISA_T:LT:LT
 
     [model]
