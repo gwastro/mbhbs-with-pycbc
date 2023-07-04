@@ -1,6 +1,11 @@
 # mbhbs_with_pycbc
 PyCBC-based search and inference of MBHBs in LDC Sangria
 
+In progress:
+
+* zero_noise
+* search section
+
 ## Setup
 
 To begin, we need to setup our virtual enviroment and install all the
@@ -58,7 +63,7 @@ After the data has been generated, we can now estimate the PSDs by navigating to
 # Search and Inference
 ## Search (in progress)
 
-## Inference (in progress)
+## Inference
 
 ### Configuration file generation
 
@@ -66,8 +71,27 @@ Inference is also split into different directories depending on the type of nois
 
 ### Running inference
 
-Each folder also contains a script called *run_inference.sh* along with the config generation script. Simply run this script from the same directory to start the inference.
+Once your data files and PSDs have been generate, to run inference, use the command on the terminal:
+
+`OMP_NUM_THREADS=1 pycbc_inference --config-files {config_file_name}.ini --output-file bbhx_ref.hdf --force --verbose `
+
+There are many other flags you can use with this command but this is the most basic command to use. The `OMP_NUM_THREADS=1` may also need removing or changing depending on your setup. This command should be ran in the directory that contains the configuration file you're using, but you can easily adjust the file paths to have the inference file output to whatever directory you want.
 
 **IMPORTANT** - The sampler section of the configuration files matches that of the analysis used in the paper. It is recommended that you use multiple cores when running inference to signifcantly reduce the time it takes to complete. We used 32 cores which would take roughly 15 - 20 hours to complete. Alternitvely, if you would rather quickly run inference (for example to test everything is working), reducing the setting `nlive` in the sampler confiuration will also reduce the time taken for inference to complete.
 
+Once inference is complete, you will have a .hdf file in the config directory which now needs some post-processing.
+
 ### Post-processing, sky position unfolding
+
+To "unfold" the sky position parameters to their original octants there are two commands you will need to run on your inference .hdf file. The first is:
+
+`pycbc_inference_extract_samples --input-file {inference_file_name}.hdf --output-file bbhx_samples.hdf --force`
+
+Finally, to reconstruct the sky positions from *bbhx_sample.hdf* you need to run the command:
+
+`OMP_NUM_THREADS=1 pycbc_inference_model_stats --input-file bbhx_samples.hdf --output-file bbhx_recon.hdf --reconstruct-parameters --force --config-file bbhx_nogb.ini --verbose`
+
+This will result in the final reconstructed sky position file *bbhx_recon.hdf*. With this file, you can now produce the corner plots with the fully sky position.
+
+# Plotting
+
