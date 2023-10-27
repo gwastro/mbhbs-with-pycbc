@@ -60,10 +60,10 @@ pip install -r companion.txt
 pip install .
 ```
 
-- [BBHX-waveform-model](https://github.com/gwastro/BBHX-waveform-model):
-
+- [BBHX-waveform-model](https://github.com/gwastro/BBHX-waveform-model/tree/v0.1-sangria-paper):
+Please use the `v0.1-sangria-paper` version to reproduce the results of this repository.
 ```
-git clone https://github.com/gwastro/BBHX-waveform-model.git
+git clone --branch v0.1-sangria-paper https://github.com/gwastro/BBHX-waveform-model.git
 cd BBHX-waveform-model
 pip install .
 ```
